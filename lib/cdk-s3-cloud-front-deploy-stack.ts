@@ -20,6 +20,63 @@ export class CdkS3CloudFrontDeployStack extends Stack {
       websiteErrorDocument: 'index.html',
     });
 
+    // S3を公開状態にせず､S3へのアクセスをCloudFrontからのリクエストに絞るための仕組み
+    const identity = new cloudfront.OriginAccessIdentity(this, 'OriginAccessIdentity', {
+      comment: `${bucket.bucketName} access identity`,
+    });
+
+    // principalsに設定したアクセス元からのみにS3バケットのGetObject権限を渡す
+    // ポリシーの設定によりS3バケットのオブジェクトはCloudFrontを介してのみアクセスできる
+    const bucketPolicyStatement = new iam.PolicyStatement({
+      actions: ['s3:GetObject'],
+      effect: iam.Effect.ALLOW,
+      principals: [identity.grantPrincipal],
+      resources: [`${bucket.bucketArn}/*`],
+    });
+    //bucketにポリシーをアタッチ
+    bucket.addToResourcePolicy(bucketPolicyStatement);
+    // CloudFrontのdistribution作成
+    new cloudfront.CloudFrontWebDistribution(this, 'WebDistributon', {
+      enableIpV6: true,
+      httpVersion: cloudfront.HttpVersion.HTTP2,
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: bucket,
+            originAccessIdentity: identity,
+          },
+          behaviors: [
+            {
+              isDefaultBehavior: true,
+              allowedMethods: cloudfront.CloudFrontAllowedMethods.GET_HEAD,
+              cachedMethods: cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD,
+              forwardedValues: {
+                queryString: false,
+              }
+            }
+          ]
+        }
+      ],
+      // 403/404エラーはindex.htmlを表示
+      errorConfigurations: [
+        {
+          errorCode: 403,
+          responseCode: 200,
+          errorCachingMinTtl: 0,
+          responsePagePath: '/index.html',
+        },
+        {
+          errorCode: 404,
+          responseCode: 200,
+          errorCachingMinTtl: 0,
+          responsePagePath: '/index.html',
+        }
+      ],
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_200,
+    })
+
+    
     
 
 
