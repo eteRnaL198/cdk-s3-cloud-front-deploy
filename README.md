@@ -15,5 +15,5 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 
 ## 参考
-− https://zuma-lab.com/posts/aws-cdk-s3-cloudfront-deploy
+-  https://zuma-lab.com/posts/aws-cdk-s3-cloudfront-deploy
 - https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v3/developer-guide/s3-example-creating-buckets.html
