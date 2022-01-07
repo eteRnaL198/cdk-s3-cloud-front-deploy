@@ -79,10 +79,10 @@ export class CdkS3CloudFrontDeployStack extends Stack {
 
     
     // lamda
-    const upload = new lambda.Function(this, 'UploadHandler', {
+    const uploadObject = new lambda.Function(this, 'UploadObjectHandler', {
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset('lambda'),
-      handler: 'upload.handler',
+      handler: 'upload-object.handler',
     })
 
   }
